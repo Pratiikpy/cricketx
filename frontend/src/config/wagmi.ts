@@ -1,6 +1,6 @@
 import { http, createConfig } from "wagmi";
 import { baseSepolia, base } from "wagmi/chains";
-import { coinbaseWallet, injected, metaMask } from "wagmi/connectors";
+import { coinbaseWallet, injected } from "wagmi/connectors";
 
 // Use Base Sepolia for development, Base Mainnet for production
 const isProduction = import.meta.env.VITE_NETWORK === "mainnet";
@@ -8,12 +8,11 @@ const isProduction = import.meta.env.VITE_NETWORK === "mainnet";
 export const wagmiConfig = createConfig({
   chains: isProduction ? [base] : [baseSepolia],
   connectors: [
-    injected(), // MetaMask, Rabby, etc.
+    injected(), // MetaMask, Rabby, and any browser wallet
     coinbaseWallet({
       appName: "CricketX",
-      preference: "all", // supports both smart wallet and extension
+      preference: "all",
     }),
-    metaMask(),
   ],
   transports: isProduction
     ? { [base.id]: http() }
