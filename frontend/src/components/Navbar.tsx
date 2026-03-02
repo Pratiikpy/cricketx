@@ -1,10 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { Wallet, Menu, X, Globe } from "lucide-react";
-import { useState } from "react";
+import { Wallet, Menu, X, Globe, Droplets, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import CricketLogo from "./CricketLogo";
 import ThemeToggle from "./ThemeToggle";
 import { useWallet } from "@/context/WalletContext";
+import { useFaucet } from "@/hooks/useFaucet";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const navLinks = [
   { to: "/markets", label: "Markets" },
@@ -13,9 +15,22 @@ const navLinks = [
 ];
 
 const Navbar = () => {
-  const { connected, address, balance, connect, disconnect } = useWallet();
+  const { connected, address, balance, connect, disconnect, rawAddress } = useWallet();
+  const { mintTestUSDC, isLoading: isMinting, isSuccess: mintSuccess, reset: resetMint } = useFaucet();
+  const { toast } = useToast();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    if (mintSuccess) {
+      toast({ title: "Test USDC Minted!", description: "100 USDC added to your wallet." });
+      resetMint();
+    }
+  }, [mintSuccess]);
+
+  const handleMint = () => {
+    if (rawAddress) mintTestUSDC(rawAddress, 100);
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
@@ -43,10 +58,16 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-3">
           <ThemeToggle />
-          <button className="text-muted-foreground hover:text-foreground p-2 rounded-lg text-xs font-medium flex items-center gap-1 border border-border">
-            <Globe size={14} />
-            EN / हि
-          </button>
+          {connected && (
+            <button
+              onClick={handleMint}
+              disabled={isMinting}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20"
+            >
+              {isMinting ? <Loader2 size={12} className="animate-spin" /> : <Droplets size={12} />}
+              Get Test USDC
+            </button>
+          )}
           {connected ? (
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-cricket-success">${balance.toFixed(2)}</span>
@@ -89,14 +110,24 @@ const Navbar = () => {
               {l.label}
             </Link>
           ))}
-          <div className="mt-3 pt-3 border-t border-border">
+          <div className="mt-3 pt-3 border-t border-border space-y-2">
             {connected ? (
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-cricket-success">${balance.toFixed(2)} USDC</span>
-                <button onClick={disconnect} className="text-sm text-muted-foreground">
-                  Disconnect
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-cricket-success">${balance.toFixed(2)} USDC</span>
+                  <button onClick={disconnect} className="text-sm text-muted-foreground">
+                    Disconnect
+                  </button>
+                </div>
+                <button
+                  onClick={handleMint}
+                  disabled={isMinting}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-accent/10 text-accent"
+                >
+                  {isMinting ? <Loader2 size={12} className="animate-spin" /> : <Droplets size={12} />}
+                  Get Test USDC
                 </button>
-              </div>
+              </>
             ) : (
               <Button onClick={connect} className="w-full bg-accent text-accent-foreground">
                 <Wallet size={16} className="mr-2" />

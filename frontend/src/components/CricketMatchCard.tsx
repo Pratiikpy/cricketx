@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { CricMatch, getMatchStatus, getTeamShort, formatScore } from "@/services/cricketApi";
 import { teamLogos } from "@/assets/teams";
 import { MapPin, Clock, Trophy } from "lucide-react";
@@ -61,7 +62,10 @@ const CricketMatchCard = ({ match }: Props) => {
   const noPrice = Math.round((1 - yesPrice) * 100) / 100;
 
   return (
-    <div className="cricket-card p-5 space-y-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98]">
+    <Link
+      to={`/market/${match.id}`}
+      className="block cricket-card p-5 space-y-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] cursor-pointer"
+    >
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -91,7 +95,7 @@ const CricketMatchCard = ({ match }: Props) => {
       {/* Toss info */}
       {match.tossWinner && (
         <div className="text-xs text-muted-foreground">
-          🪙 {getTeamShort(match.tossWinner)} won toss{match.tossChoice ? `, chose to ${match.tossChoice}` : ""}
+          Toss: {getTeamShort(match.tossWinner)} won{match.tossChoice ? `, chose to ${match.tossChoice}` : ""}
         </div>
       )}
 
@@ -112,24 +116,24 @@ const CricketMatchCard = ({ match }: Props) => {
       {/* Countdown for upcoming */}
       {status === "upcoming" && <MatchCountdown targetDate={match.dateTimeGMT} />}
 
-      {/* Mock prediction market */}
+      {/* Prediction market */}
       {status !== "completed" && (
         <div className="p-3 rounded-lg bg-secondary/50">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold">🏏 Match Winner Prediction</span>
+            <span className="text-xs font-semibold">Match Winner Prediction</span>
             <SparklineChart basePrice={yesPrice} />
           </div>
           <div className="flex gap-2">
-            <button className="flex-1 py-2.5 px-3 rounded-lg text-sm font-semibold bg-cricket-teal/10 text-cricket-teal hover:bg-cricket-teal/20 transition-all">
+            <div className="flex-1 py-2.5 px-3 rounded-lg text-sm font-semibold bg-cricket-teal/10 text-cricket-teal text-center">
               YES {shortA} <span className="ml-1 opacity-75">${yesPrice.toFixed(2)}</span>
-            </button>
-            <button className="flex-1 py-2.5 px-3 rounded-lg text-sm font-semibold bg-cricket-coral/10 text-cricket-coral hover:bg-cricket-coral/20 transition-all">
+            </div>
+            <div className="flex-1 py-2.5 px-3 rounded-lg text-sm font-semibold bg-cricket-coral/10 text-cricket-coral text-center">
               NO {shortB} <span className="ml-1 opacity-75">${noPrice.toFixed(2)}</span>
-            </button>
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </Link>
   );
 };
 
