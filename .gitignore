@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.env
+*.log
+
+# Hardhat
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+
+# Bot
+bot/dist/
+
+# Frontend
+frontend/dist/
+
+# OS files
+.DS_Store
+Thumbs.db

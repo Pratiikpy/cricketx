@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 23% 97%;
+    --foreground: 215 26% 25%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 26% 25%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 26% 25%;
+
+    --primary: 240 28% 14%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 23% 94%;
+    --secondary-foreground: 215 26% 25%;
+
+    --muted: 220 14% 92%;
+    --muted-foreground: 212 17% 52%;
+
+    --accent: 18 100% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 100% 71%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
+    --ring: 18 100% 60%;
+
+    --radius: 0.75rem;
+
+    /* CricketX Custom Tokens */
+    --cricket-navy: 240 28% 14%;
+    --cricket-orange: 18 100% 60%;
+    --cricket-teal: 174 58% 55%;
+    --cricket-coral: 0 100% 71%;
+    --cricket-success: 145 45% 51%;
+    --cricket-bg: 220 23% 97%;
+    --cricket-card: 0 0% 100%;
+    --cricket-text: 215 26% 25%;
+    --cricket-text-secondary: 212 17% 52%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 240 28% 10%;
+    --foreground: 220 23% 95%;
+    --card: 240 28% 14%;
+    --card-foreground: 220 23% 95%;
+    --popover: 240 28% 14%;
+    --popover-foreground: 220 23% 95%;
+    --primary: 18 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 20% 20%;
+    --secondary-foreground: 220 23% 95%;
+    --muted: 240 20% 18%;
+    --muted-foreground: 212 17% 65%;
+    --accent: 18 100% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 100% 71%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 20% 22%;
+    --input: 240 20% 22%;
+    --ring: 18 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer components {
+  .cricket-gradient {
+    background: linear-gradient(135deg, hsl(240 28% 14%) 0%, hsl(240 28% 20%) 100%);
+  }
+
+  .cricket-gradient-orange {
+    background: linear-gradient(135deg, hsl(18 100% 60%) 0%, hsl(25 100% 55%) 100%);
+  }
+
+  .cricket-glow {
+    box-shadow: 0 0 30px -5px hsl(18 100% 60% / 0.3);
+  }
+
+  .cricket-card {
+    @apply bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  .live-pulse {
+    @apply relative;
+  }
+  .live-pulse::before {
+    content: '';
+    @apply absolute w-2 h-2 bg-cricket-success rounded-full;
+    animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .bottom-sheet {
+    @apply fixed bottom-0 left-0 right-0 bg-card rounded-t-2xl shadow-2xl border-t border-border z-50;
+    animation: slide-up 0.3s ease-out;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.5); }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
