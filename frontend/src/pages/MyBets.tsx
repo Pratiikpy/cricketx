@@ -8,14 +8,11 @@ import { useCancelOrder } from "@/hooks/useCancelOrder";
 import { useReadContract } from "wagmi";
 import { CricketXMarketABI } from "@/config/contracts";
 import { formatUnits } from "viem";
-import { TrendingUp, TrendingDown, BarChart3, Trophy, Download, Wallet, Loader2 } from "lucide-react";
+import { Trophy, Wallet, Loader2, BarChart3 } from "lucide-react";
 import { useCountUp } from "@/hooks/useCountUp";
 import { fireConfetti } from "@/hooks/useConfetti";
-import ShareButton from "@/components/ShareButton";
-import PnLChart from "@/components/PnLChart";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { userBets as mockBets } from "@/data/mockData";
 
 type Tab = "all" | "active" | "won" | "lost";
 
@@ -26,22 +23,18 @@ const tabs: { label: string; value: Tab }[] = [
   { label: "Lost", value: "lost" },
 ];
 
-const AnimatedValue = ({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) => {
-  const animated = useCountUp(Math.abs(Math.round(value * 100)), 1000);
-  const display = (animated / 100).toFixed(2);
-  return <>{prefix}{value < 0 ? "-" : ""}{display}{suffix}</>;
-};
-
-// Component to display orders from a single market
+// Single market's orders for a user
 function MarketOrders({
   marketAddress,
   userAddress,
+  onOrdersFound,
 }: {
   marketAddress: `0x${string}`;
   userAddress: `0x${string}`;
+  onOrdersFound: (count: number) => void;
 }) {
   const { market } = useOnchainMarketInfo(marketAddress);
-  const { data: userOrdersData } = useReadContract({
+  const { data: userOrdersData, isLoading } = useReadContract({
     address: marketAddress,
     abi: CricketXMarketABI,
     functionName: "getUserOrders",
@@ -59,7 +52,17 @@ function MarketOrders({
     if (cancelSuccess) { toast({ title: "Order Cancelled" }); resetCancel(); }
   }, [cancelSuccess]);
 
-  if (!userOrdersData || !market) return null;
+  // Report order count back to parent
+  useEffect(() => {
+    if (!userOrdersData) {
+      onOrdersFound(0);
+      return;
+    }
+    const [ids] = userOrdersData as [bigint[], ...unknown[]];
+    onOrdersFound(ids.length);
+  }, [userOrdersData]);
+
+  if (isLoading || !userOrdersData || !market) return null;
 
   const [ids, sides, prices, totalAmounts, matchedAmounts, unmatchedAmounts, actives] = userOrdersData as [
     bigint[], number[], bigint[], bigint[], bigint[], bigint[], boolean[]
@@ -99,12 +102,8 @@ function MarketOrders({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {o.isWinner && (
-              <span className="text-sm font-bold text-cricket-success">Winner</span>
-            )}
-            {o.isLoser && (
-              <span className="text-sm font-bold text-cricket-coral">Lost</span>
-            )}
+            {o.isWinner && <span className="text-sm font-bold text-cricket-success">Winner</span>}
+            {o.isLoser && <span className="text-sm font-bold text-cricket-coral">Lost</span>}
             {o.unmatchedAmount > 0 && o.isActive && !market.isSettled && (
               <button
                 onClick={() => cancelOrder(marketAddress, o.id)}
@@ -145,11 +144,24 @@ function MarketOrders({
 const MyBets = () => {
   const { connected, rawAddress, connect } = useWallet();
   const [activeTab, setActiveTab] = useState<Tab>("all");
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [marketsChecked, setMarketsChecked] = useState(0);
   const confettiFired = useRef(false);
 
-  // Get all on-chain market addresses
   const { data: allMarkets, isLoading } = useAllMarketAddresses();
   const marketAddresses = (allMarkets as `0x${string}`[] | undefined) || [];
+
+  // Track how many markets have been checked and total orders found
+  const handleOrdersFound = (count: number) => {
+    setMarketsChecked((prev) => prev + 1);
+    setTotalOrders((prev) => prev + count);
+  };
+
+  // Reset counts when markets change
+  useEffect(() => {
+    setTotalOrders(0);
+    setMarketsChecked(0);
+  }, [allMarkets, rawAddress]);
 
   useEffect(() => {
     if (activeTab === "won" && !confettiFired.current) {
@@ -173,6 +185,9 @@ const MyBets = () => {
       </Layout>
     );
   }
+
+  const allChecked = marketsChecked >= marketAddresses.length;
+  const hasNoBets = allChecked && totalOrders === 0;
 
   return (
     <Layout>
@@ -198,23 +213,41 @@ const MyBets = () => {
           ))}
         </div>
 
-        {/* On-chain orders from all markets */}
+        {/* Content */}
         {isLoading ? (
           <div className="text-center py-12">
             <Loader2 size={24} className="mx-auto animate-spin text-muted-foreground" />
             <p className="text-sm text-muted-foreground mt-2">Loading your bets...</p>
           </div>
-        ) : marketAddresses.length > 0 ? (
-          <div className="space-y-3">
-            {marketAddresses.map((addr) => (
-              <MarketOrders key={addr} marketAddress={addr} userAddress={rawAddress!} />
-            ))}
-          </div>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No on-chain markets found. Place your first bet!</p>
-            <Link to="/markets" className="text-accent underline text-sm mt-2 inline-block">Browse Markets</Link>
-          </div>
+          <>
+            <div className="space-y-3">
+              {marketAddresses.map((addr) => (
+                <MarketOrders
+                  key={addr}
+                  marketAddress={addr}
+                  userAddress={rawAddress!}
+                  onOrdersFound={handleOrdersFound}
+                />
+              ))}
+            </div>
+
+            {/* Show empty state when all markets checked and no orders found */}
+            {hasNoBets && (
+              <div className="text-center py-16 space-y-3">
+                <BarChart3 size={48} className="mx-auto text-muted-foreground" />
+                <h2 className="text-lg font-bold">No bets yet</h2>
+                <p className="text-sm text-muted-foreground">
+                  You haven't placed any predictions yet. Browse markets to get started!
+                </p>
+                <Link to="/markets">
+                  <Button className="bg-accent text-accent-foreground mt-2">
+                    Browse Markets
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </>
         )}
       </div>
     </Layout>
